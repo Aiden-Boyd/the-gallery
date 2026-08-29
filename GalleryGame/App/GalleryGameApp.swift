@@ -4,7 +4,7 @@ import SwiftUI
 struct GalleryGameApp: App {
     var body: some Scene {
         WindowGroup {
-            MuseumView()
+            AppRootView()
         }
     }
 }
