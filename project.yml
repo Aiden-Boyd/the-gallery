@@ -1,0 +1,25 @@
+name: GalleryGame
+options:
+  bundleIdPrefix: com.aidenboyd
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    SWIFT_VERSION: "5.10"
+
+targets:
+  GalleryGame:
+    type: application
+    platform: iOS
+    sources:
+      - GalleryGame
+    info:
+      path: GalleryGame/Info.plist
+      properties:
+        CFBundleDisplayName: Gallery
+        UILaunchScreen: {}
+        NSPhotoLibraryUsageDescription: Gallery lets you choose photos to display inside your virtual museum.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aidenboyd.gallerygame
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
