@@ -14,6 +14,9 @@ final class MuseumSceneController: ObservableObject {
     private var movementForward: Float = 0
     private var movementRight: Float = 0
     private var movementTimer: Timer?
+    private var remotePlayerNodes: [String: SCNNode] = [:]
+
+    var onLocalPoseChanged: ((PlayerPose) -> Void)?
 
     init() {
         buildScene()
@@ -32,7 +35,9 @@ final class MuseumSceneController: ObservableObject {
     private func updateMovement() {
         guard abs(movementForward) > 0.01 || abs(movementRight) > 0.01 else { return }
 
-        let speedPerFrame: Float = 0.055
+        let configuredSpeed = UserDefaults.standard.double(forKey: "movementSpeed")
+        let speedMultiplier = Float(configuredSpeed == 0 ? 1.0 : configuredSpeed)
+        let speedPerFrame: Float = 0.055 * speedMultiplier
         let sinYaw = sin(yaw)
         let cosYaw = cos(yaw)
 
@@ -49,6 +54,7 @@ final class MuseumSceneController: ObservableObject {
         next.z = min(max(next.z, -4.45), 4.45)
 
         cameraNode.position = next
+        publishLocalPose()
     }
 
     func setMovement(forward: Float, right: Float) {
@@ -198,10 +204,66 @@ final class MuseumSceneController: ObservableObject {
     }
 
     func look(deltaX: CGFloat, deltaY: CGFloat) {
-        yaw -= Float(deltaX) * 0.004
-        pitch -= Float(deltaY) * 0.003
+        let configuredSensitivity = UserDefaults.standard.double(forKey: "lookSensitivity")
+        let sensitivity = Float(configuredSensitivity == 0 ? 1.0 : configuredSensitivity)
+
+        yaw -= Float(deltaX) * 0.004 * sensitivity
+        pitch -= Float(deltaY) * 0.003 * sensitivity
         pitch = min(max(pitch, -0.85), 0.85)
 
         cameraNode.eulerAngles = SCNVector3(pitch, yaw, 0)
+        publishLocalPose()
+    }
+
+    func currentPose() -> PlayerPose {
+        PlayerPose(
+            x: cameraNode.position.x,
+            y: cameraNode.position.y,
+            z: cameraNode.position.z,
+            yaw: yaw
+        )
+    }
+
+    private func publishLocalPose() {
+        onLocalPoseChanged?(currentPose())
+    }
+
+    func updateRemotePlayer(name: String, pose: PlayerPose) {
+        let node: SCNNode
+
+        if let existing = remotePlayerNodes[name] {
+            node = existing
+        } else {
+            let bodyGeometry = SCNCapsule(capRadius: 0.22, height: 1.2)
+            bodyGeometry.firstMaterial?.diffuse.contents = UIColor.systemBlue
+
+            let body = SCNNode(geometry: bodyGeometry)
+            body.position = SCNVector3(0, 0.6, 0)
+
+            let headGeometry = SCNSphere(radius: 0.22)
+            headGeometry.firstMaterial?.diffuse.contents = UIColor.systemTeal
+
+            let head = SCNNode(geometry: headGeometry)
+            head.position = SCNVector3(0, 1.35, 0)
+
+            let root = SCNNode()
+            root.name = "remotePlayer_\(name)"
+            root.addChildNode(body)
+            root.addChildNode(head)
+            scene.rootNode.addChildNode(root)
+
+            remotePlayerNodes[name] = root
+            node = root
+        }
+
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 0.08
+        node.position = SCNVector3(pose.x, 0, pose.z)
+        node.eulerAngles.y = pose.yaw
+        SCNTransaction.commit()
+    }
+
+    func removeRemotePlayer(name: String) {
+        remotePlayerNodes.removeValue(forKey: name)?.removeFromParentNode()
     }
 }
