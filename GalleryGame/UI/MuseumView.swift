@@ -3,9 +3,15 @@ import SwiftUI
 import UIKit
 
 struct MuseumView: View {
+    let multiplayer: MultiplayerManager?
+
     @StateObject private var museum = MuseumSceneController()
     @State private var pickerItem: PhotosPickerItem?
     @State private var isPickingPhoto = false
+
+    init(multiplayer: MultiplayerManager? = nil) {
+        self.multiplayer = multiplayer
+    }
 
     var body: some View {
         ZStack {
@@ -39,6 +45,36 @@ struct MuseumView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            guard let multiplayer else { return }
+
+            museum.onLocalPoseChanged = { pose in
+                multiplayer.sendPose(pose)
+            }
+
+            multiplayer.onPoseReceived = { name, pose in
+                museum.updateRemotePlayer(name: name, pose: pose)
+            }
+
+            multiplayer.onPhotoReceived = { index, image in
+                museum.applyPhoto(image, to: index)
+            }
+
+            multiplayer.onPeerDisconnected = { name in
+                museum.removeRemotePlayer(name: name)
+            }
+
+            multiplayer.sendPose(museum.currentPose())
+        }
+        .onDisappear {
+            museum.onLocalPoseChanged = nil
+
+            if let multiplayer {
+                multiplayer.onPoseReceived = nil
+                multiplayer.onPhotoReceived = nil
+                multiplayer.onPeerDisconnected = nil
+            }
+        }
         .onChange(of: museum.selectedFrameIndex) { _, newValue in
             isPickingPhoto = newValue != nil
         }
@@ -60,6 +96,7 @@ struct MuseumView: View {
 
                     await MainActor.run {
                         museum.applyPhoto(image, to: frameIndex)
+                        multiplayer?.sendPhoto(index: frameIndex, image: image)
                         museum.selectedFrameIndex = nil
                         pickerItem = nil
                     }
