@@ -63,9 +63,7 @@ struct MultiplayerLobbyView: View {
             }
         }
         .onDisappear {
-            if multiplayer.connectedPeers.isEmpty {
-                multiplayer.disconnect()
-            }
+            multiplayer.disconnect()
         }
     }
 }
