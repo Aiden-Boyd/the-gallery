@@ -11,9 +11,54 @@ final class MuseumSceneController: ObservableObject {
 
     private var yaw: Float = 0
     private var pitch: Float = 0
+    private var movementForward: Float = 0
+    private var movementRight: Float = 0
+    private var movementTimer: Timer?
 
     init() {
         buildScene()
+        startMovementLoop()
+    }
+
+    private func startMovementLoop() {
+        movementTimer?.invalidate()
+        movementTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.updateMovement()
+            }
+        }
+    }
+
+    private func updateMovement() {
+        guard abs(movementForward) > 0.01 || abs(movementRight) > 0.01 else { return }
+
+        let speedPerFrame: Float = 0.055
+        let sinYaw = sin(yaw)
+        let cosYaw = cos(yaw)
+
+        // SceneKit cameras face local -Z. Build movement from the camera's
+        // horizontal forward/right vectors so controls stay camera-relative.
+        let dx = (-movementForward * sinYaw + movementRight * cosYaw) * speedPerFrame
+        let dz = (-movementForward * cosYaw - movementRight * sinYaw) * speedPerFrame
+
+        var next = cameraNode.position
+        next.x += dx
+        next.z += dz
+
+        next.x = min(max(next.x, -3.55), 3.55)
+        next.z = min(max(next.z, -4.45), 4.45)
+
+        cameraNode.position = next
+    }
+
+    func setMovement(forward: Float, right: Float) {
+        movementForward = min(max(forward, -1), 1)
+        movementRight = min(max(right, -1), 1)
+    }
+
+    func stopMovement() {
+        movementForward = 0
+        movementRight = 0
     }
 
     private func buildScene() {
@@ -150,24 +195,6 @@ final class MuseumSceneController: ObservableObject {
 
         plane.firstMaterial?.diffuse.contents = image
         hint = "Photo added to frame \(index + 1)."
-    }
-
-    func move(forward: Float, right: Float) {
-        let speed: Float = 0.18
-        let sinYaw = sin(yaw)
-        let cosYaw = cos(yaw)
-
-        let dx = (right * cosYaw + forward * sinYaw) * speed
-        let dz = (right * -sinYaw + forward * -cosYaw) * speed
-
-        var next = cameraNode.position
-        next.x += dx
-        next.z += dz
-
-        next.x = min(max(next.x, -3.55), 3.55)
-        next.z = min(max(next.z, -4.45), 4.45)
-
-        cameraNode.position = next
     }
 
     func look(deltaX: CGFloat, deltaY: CGFloat) {
