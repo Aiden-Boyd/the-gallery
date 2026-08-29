@@ -18,6 +18,13 @@
     <true/>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Gallery lets you choose photos to display inside your virtual museum.</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Gallery uses your local network to find and play with nearby iPhones.</string>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_gallerygame._tcp</string>
+        <string>_gallerygame._udp</string>
+    </array>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
