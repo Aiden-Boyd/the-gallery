@@ -24,6 +24,10 @@ struct AppRootView: View {
 
                         Text("Build a museum from your camera roll.")
                             .foregroundStyle(.secondary)
+
+                        Text("BUILD MAIN-MENU-002")
+                            .font(.caption2.monospaced())
+                            .foregroundStyle(.tertiary)
                     }
 
                     Spacer()
