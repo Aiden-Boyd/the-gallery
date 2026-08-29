@@ -75,33 +75,22 @@ struct MuseumView: View {
     }
 
     private var movementControls: some View {
-        HStack(alignment: .bottom, spacing: 16) {
-            VStack(spacing: 8) {
-                MoveButton(systemName: "arrow.up") {
-                    museum.move(forward: 1, right: 0)
+        HStack(alignment: .bottom) {
+            VirtualJoystick(
+                onChange: { forward, right in
+                    museum.setMovement(forward: forward, right: right)
+                },
+                onEnd: {
+                    museum.stopMovement()
                 }
-
-                HStack(spacing: 8) {
-                    MoveButton(systemName: "arrow.left") {
-                        museum.move(forward: 0, right: -1)
-                    }
-
-                    MoveButton(systemName: "arrow.down") {
-                        museum.move(forward: -1, right: 0)
-                    }
-
-                    MoveButton(systemName: "arrow.right") {
-                        museum.move(forward: 0, right: 1)
-                    }
-                }
-            }
+            )
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 6) {
                 Image(systemName: "hand.draw")
                     .font(.title2)
-                Text("Drag anywhere\nto look around")
+                Text("Drag the right side\nto look around")
                     .font(.caption2)
                     .multilineTextAlignment(.trailing)
             }
