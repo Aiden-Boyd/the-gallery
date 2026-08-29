@@ -8,6 +8,7 @@ struct MuseumView: View {
     @StateObject private var museum = MuseumSceneController()
     @State private var pickerItem: PhotosPickerItem?
     @State private var isPickingPhoto = false
+    @AppStorage("showHints") private var showHints = true
 
     init(multiplayer: MultiplayerManager? = nil) {
         self.multiplayer = multiplayer
@@ -32,13 +33,15 @@ struct MuseumView: View {
 
                 Spacer()
 
-                Text(museum.hint)
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 9)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 12)
+                if showHints {
+                    Text(museum.hint)
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 9)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 12)
+                }
 
                 movementControls
                     .padding(.bottom, 24)
