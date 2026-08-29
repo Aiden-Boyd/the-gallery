@@ -238,7 +238,9 @@ extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
         withContext context: Data?,
         invitationHandler: @escaping (Bool, MCSession?) -> Void
     ) {
-        invitationHandler(true, session)
+        Task { @MainActor in
+            invitationHandler(true, self.session)
+        }
     }
 
     nonisolated func advertiser(
